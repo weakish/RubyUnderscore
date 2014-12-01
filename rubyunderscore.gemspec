@@ -39,15 +39,15 @@ Gem::Specification.new do |s|
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<ParseTree>, ["= 3.0.5"])
       s.add_runtime_dependency(%q<ruby2ruby>, [">= 0"])
+      s.add_runtime_dependency(%q<ruby_parser>, ["~> 3.6"])
     else
-      s.add_dependency(%q<ParseTree>, ["= 3.0.5"])
       s.add_dependency(%q<ruby2ruby>, [">= 0"])
+      s.add_runtime_dependency(%q<ruby_parser>, ["~>= 3.6"])
     end
   else
-    s.add_dependency(%q<ParseTree>, ["= 3.0.5"])
     s.add_dependency(%q<ruby2ruby>, [">= 0"])
+    s.add_runtime_dependency(%q<ruby_parser>, ["~> 3.6"])
   end
 end
 

@@ -3,7 +3,8 @@ require 'pp'
 require 'sexp_processor'
 require 'ruby2ruby'
 require 'unified_ruby'
-require 'parse_tree'
+require 'ruby_parser'
+
 module RubyUnderscore
   class AbstractProcessor < SexpProcessor
     def initialize
@@ -46,9 +47,40 @@ module RubyUnderscore
       sexpNeedsEnhancing sexpOf clas, method
     end
 
+    # Extract a subsexp of method.
+    # @param [Sexp] a sexp presenting ruby code
+    # @param [Symbol] a method name
+    # @return [Sexp] a subsexp of the specifyed method
+    # @example
+    #   sexp = s(:class, :A, nil, s(:scope, s(:block, s(:defn, :a, s(:args), s(:scope, s(:block, s(:nil)))), s(:defn, :b, s(:args), s(:scope, s(:block, s(:nil)))))))
+    #   extarct_method_sexp(sexp, :a)
+    #   #=> s(:defn, :a, s(:args), s(:scope, s(:block, s(:nil))))
+    define_method :extract_method_sexp do |sexp, method_name|
+      if result = sexp.sexp_type == :defn && sexp[1] == method_name
+          result = sexp
+      else
+        sexp.each_sexp do |s|
+          return result if result.is_a? Sexp
+          result = extract_method_sexp s, method_name
+        end
+      end
+      result
+    end
 
+    # Extract a method sexp from a class sexp.
+    # @param [String] class sexp
+    # @param [Symbol] method name
+    # @return [Array] an array converted from a method sexp
+    # @example
+    #   # This comes from ParseTree's test:
+    #   # https://github.com/seattlerb/parsetree/blob/master/test/test_parse_tree.rb#L2370-L2378
+    #   str = "class A; def a; end; def b; end; end"
+    #   sexpOf(str, :a)
+    #   #=> [:defn, :a, [:scope, [:block, [:args], [:nil]]]]
     def sexpOf(clas, method)
-      ParseTree.translate clas, method
+        p = RubyParser.new
+        sexp = p.parse(clas)
+        extract_method_sexp(sexp, method).to_a
     end
 
     def sexpNeedsEnhancing(sexp)
